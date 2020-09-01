@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:pocket_reminder/constants.dart';
 
 
 class ReusableCard extends StatelessWidget {
@@ -30,51 +31,39 @@ class TaskTile extends StatelessWidget{
   final bool isChecked;
   final String taskTitle;
   final Function checkBoxCallBack;
+  final String taskDesc;
+  
 
-  TaskTile({this.isChecked, this.taskTitle,this.checkBoxCallBack});
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Icon(
-        Icons.map,
-        color: Colors.white,
-      ),
-      trailing: Checkbox(
-        value: isChecked,
-        onChanged: checkBoxCallBack,
-      ),
-      title: Text(
-        taskTitle,
-        style: TextStyle(
-            color: Colors.white,
-            fontSize: 30.0,
-            fontFamily: 'PatrickHand',
-            decoration: isChecked ? TextDecoration.lineThrough : null),
-      ),
-    );
-  }
-}
-
-
-
-class InputCards extends StatelessWidget {
-  InputCards({this.onPressed, this.cardChild, this.colour});
-
-  final Function onPressed;
-  final Widget cardChild;
-  final Color colour;
+  TaskTile({this.isChecked, this.taskTitle,this.checkBoxCallBack,this.taskDesc});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        margin: EdgeInsets.all(15.0),
-        child: cardChild,
-        decoration: BoxDecoration(
-          color: colour,
-          borderRadius: BorderRadius.circular(15.0),
+      onTap: (){
+        showModalBottomSheet(context: context, isScrollControlled: true ,builder: (context)=>SingleChildScrollView(
+          child: Container(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: TaskDetailsScreen(taskTitle: taskTitle,taskDesc: taskDesc ,taskHour: TimePicker.time.hour.toString(), taskMinute: TimePicker.time.minute.toString(),
+            taskDay: DatePicker.dateTime.day.toString(),
+            taskMonth: DatePicker.dateTime.month.toString(),
+            taskYear: DatePicker.dateTime.year.toString(),
+            ),
+          ),
+        ));
+      },
+      child: ListTile(
+
+        trailing: Checkbox(
+          value: isChecked,
+          onChanged: checkBoxCallBack,
+        ),
+        title: Text(
+          taskTitle,
+          style: TextStyle(
+              color: Colors.white,
+              fontSize: 30.0,
+              fontFamily: 'PatrickHand',
+              decoration: isChecked ? TextDecoration.lineThrough : null),
         ),
       ),
     );
@@ -82,13 +71,16 @@ class InputCards extends StatelessWidget {
 }
 
 class DatePicker extends StatefulWidget {
+  static DateTime dateTime;
+
+
+
   @override
   _DatePickerState createState() => _DatePickerState();
 }
 
 class _DatePickerState extends State<DatePicker> {
-  DateTime dateTime;
-
+   DateTime selectedDate;
 
 
   @override
@@ -103,8 +95,8 @@ class _DatePickerState extends State<DatePicker> {
                   lastDate: DateTime(2080))
               .then((date) {
             setState(() {
-              dateTime = date;
-
+              selectedDate = date;
+              DatePicker.dateTime = selectedDate;
             });
           });
         },
@@ -112,13 +104,13 @@ class _DatePickerState extends State<DatePicker> {
         child: Container(
           width: double.infinity,
           child: Text(
-            dateTime == null
+            selectedDate == null
                 ? 'Add date'
-                : dateTime.day.toString() +
+                : selectedDate.day.toString() +
                     '/' +
-                    dateTime.month.toString() +
+                selectedDate.month.toString() +
                     '/' +
-                    dateTime.year.toString(),
+                selectedDate.year.toString(),
             style: TextStyle(
               fontSize: 30.0,
               fontFamily: 'BebasNeue',
@@ -135,12 +127,14 @@ class _DatePickerState extends State<DatePicker> {
 }
 
 class TimePicker extends StatefulWidget {
+  static TimeOfDay time;
+
   @override
   _TimePickerState createState() => _TimePickerState();
 }
 
 class _TimePickerState extends State<TimePicker> {
-  TimeOfDay _time;
+  TimeOfDay _selectedTime;
 
   @override
 
@@ -155,9 +149,9 @@ class _TimePickerState extends State<TimePicker> {
               color: Colors.deepPurple,
             ),
             child: Text(
-              _time == null
+              _selectedTime == null
                   ? 'Add Time'
-                  : _time.hour.toString() + ':' + _time.minute.toString(),
+                  : _selectedTime.hour.toString() + ':' + _selectedTime.minute.toString(),
               style: TextStyle(
                 fontSize: 30.0,
                 fontFamily: 'BebasNeue',
@@ -170,10 +164,56 @@ class _TimePickerState extends State<TimePicker> {
             showTimePicker(context: context, initialTime: TimeOfDay.now())
                 .then((selectedTime) {
               setState(() {
-                _time = selectedTime;
+                _selectedTime = selectedTime;
+                TimePicker.time = _selectedTime;
               });
             });
           }),
     );
   }
 }
+
+class TaskDetailsScreen extends StatelessWidget {
+
+  final String taskTitle;
+  final String taskDay;
+  final String taskMonth;
+  final String taskYear;
+  final String taskHour;
+  final String taskMinute;
+  final String taskDesc;
+
+  TaskDetailsScreen({this.taskTitle,this.taskDay,this.taskMonth,this.taskYear,this.taskHour,this.taskMinute,this.taskDesc});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Color(0xFF111328).withOpacity(0.5),
+      child: Container(
+        padding: EdgeInsets.all(20.0),
+
+        decoration: BoxDecoration(
+          color: Color(0xFF1D1E33),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20.0),
+            topRight: Radius.circular(20.0)
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(taskTitle,style: kTaskCardStyle,),
+            SizedBox(height: 10.0,),
+            Text('Date: ' + taskMonth + '/' + taskDay + '/' + taskYear,style: kTaskCardStyle,),
+            SizedBox(height: 10.0),
+            Text('Time: ' + taskHour + ':' + taskMinute,style: kTaskCardStyle,),
+            SizedBox(height: 10.0,),
+            Text(taskDesc != null ? 'Description: ' + taskDesc : 'No description', style: kTaskCardStyle,),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+

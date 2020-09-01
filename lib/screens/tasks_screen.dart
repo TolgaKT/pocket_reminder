@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:pocket_reminder/screens/input_screen.dart';
 import 'package:pocket_reminder/widgets.dart';
 import 'package:pocket_reminder/constants.dart';
-import 'package:pocket_reminder/models/task.dart';
 import 'package:pocket_reminder/models/task_data.dart';
 import 'package:provider/provider.dart';
 
@@ -168,12 +167,8 @@ class _TasksScreenState extends State<TasksScreen> {
   void initState() {
     getDate();
     adjustDateCard();
-    print(DateTime.now().weekday);
     super.initState();
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -252,16 +247,22 @@ class _TasksScreenState extends State<TasksScreen> {
                       cardChild: Consumer<TaskData>(
                         builder: (context, taskData , child){
                           return  ListView.builder(itemBuilder: (context,index){
-                            return TaskTile(
-                              //tasks[index].name
-                              //taskTitle: tasks[index].name , isChecked: tasks[index].isDone
-                                taskTitle: taskData.tasks[index].name ,
-                                isChecked: taskData.tasks[index].isDone,
-                                checkBoxCallBack: (bool checkBoxState){
-//                            setState(() {
-//                              tasks[index].toggleDOne();
-//                            });
-                                }
+                            final task = taskData.tasks[index];
+                            return Dismissible(
+                              key: Key(task.toString()),
+                              onDismissed: (direction){
+                                taskData.deleteTaskToday(task);
+                              },
+                              child: TaskTile(
+                                //tasks[index].name
+                                //taskTitle: tasks[index].name , isChecked: tasks[index].isDone
+                                  taskTitle: task.name ,
+                                  isChecked: task.isDone,
+                                  taskDesc: task.desc,
+                                  checkBoxCallBack: (bool checkBoxState){
+                                    taskData.updateTask(task);
+                                  }
+                              ),
                             );
                           }, itemCount: taskData.taskCount,);
 
@@ -283,11 +284,26 @@ class _TasksScreenState extends State<TasksScreen> {
                     flex: 3,
                     child: ReusableCard(
                       colour: Color(0xFF1D1E33),
-                      cardChild: ListView(
-                        children: <Widget>[
-
-                        ],
-                      ),
+                      cardChild: Consumer<TaskData>(
+                        builder: (context,taskData,child){
+                          return ListView.builder(itemBuilder: (context,index){
+                            final task = taskData.tomTask[index];
+                            return Dismissible(
+                              key: Key(task.toString()),
+                              onDismissed: (direction){
+                                taskData.deleteTaskTom(task);
+                              },
+                              child: TaskTile(
+                                taskTitle: task.name,
+                                isChecked: task.isDone,
+                                checkBoxCallBack: (bool checkBoxState){
+                                  taskData.updateTask(task);
+                                },
+                              ),
+                            );
+                          },itemCount: taskData.tomTaskCount);
+                        },
+                      )
                     ),
                   ),
                   Expanded(
@@ -295,12 +311,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     child: RaisedButton(
                       onPressed: () {
                         Navigator.push((context), MaterialPageRoute(
-                          builder: (context) => InputScreen((newTaskTitle, newTaskDate){
-                            print(newTaskDate);
-//                            setState(() {
-//                              tasks.add(Task(name: newTaskTitle));
-//                            });
-                          })
+                          builder: (context) => InputScreen()
                         ));
                       },
                       textColor: Colors.white,

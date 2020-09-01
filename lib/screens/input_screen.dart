@@ -1,19 +1,16 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:pocket_reminder/widgets.dart';
-
+import 'package:provider/provider.dart';
+import 'package:pocket_reminder/models/task_data.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:pocket_reminder/constants.dart';
 
 class InputScreen extends StatelessWidget {
-
-
-  final Function addTaskCallBack;
-
-  InputScreen(this.addTaskCallBack);
-
   @override
   Widget build(BuildContext context) {
     String newTextTitle;
-    DateTime newTextDate;
+    String newTextDesc;
 
     return Scaffold(
       backgroundColor: Color(0xFF111328),
@@ -50,12 +47,19 @@ class InputScreen extends StatelessWidget {
                           color: Colors.white.withOpacity(0.7)),
                     ),
                     TextField(
-                      onChanged: (newValue){
+                      onChanged: (newValue) {
                         newTextTitle = newValue;
-
                       },
-
                       decoration: InputDecoration(hintText: 'Enter Task'),
+                    ),
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    TextField(
+                      onChanged: (newValue){
+                        newTextDesc = newValue;
+                      },
+                      decoration: InputDecoration(hintText: 'Enter Description (optional)'),
                     ),
                   ],
                 ),
@@ -72,7 +76,6 @@ class InputScreen extends StatelessWidget {
                   child: SafeArea(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-
                       children: <Widget>[
                         Expanded(
                           flex: 3,
@@ -90,7 +93,6 @@ class InputScreen extends StatelessWidget {
                                 width: 40.0,
                               ),
                               DatePicker(),
-
                             ],
                           ),
                         ),
@@ -114,35 +116,82 @@ class InputScreen extends StatelessWidget {
                           ),
                         ),
                         Expanded(
-                          child: RaisedButton(
-                            color: Color(0xFF1D1E33),
-                            padding: EdgeInsets.all(0.0),
-                            onPressed: (){
-                              addTaskCallBack(newTextTitle, newTextDate);
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              height: double.infinity,
+                            child: RaisedButton(
+                          color: Color(0xFF1D1E33),
+                          padding: EdgeInsets.all(0.0),
+                          onPressed: () {
+                            if (newTextTitle == null) {
+                              Alert(
+                                  context: context,
+                                  type: AlertType.info,
+                                  style: kAlertStyle,
+                                  desc: 'Name of the task cannot be empty!',
+                                  title: 'Error',
+                                  buttons: [
+                                    DialogButton(
+                                      child: Text(
+                                        'OK',
+                                        style: TextStyle(
+                                          fontSize: 20.0,
+                                          fontFamily: 'BebasNeue',
+                                        ),
+                                      ),
+                                      onPressed: () => Navigator.pop(context),
+                                      color: Colors.deepPurple,
+                                    )
+                                  ]).show();
+                            } else if (TimePicker.time == null) {
+                              Alert(
+                                  style: kAlertStyle,
+                                  context: context,
+                                  type: AlertType.info,
+                                  desc: 'Time of the task cannot be empty!',
+                                  title: 'Error',
+                                  buttons: [
+                                    DialogButton(
+                                      child: Text('Ok',style: TextStyle(
+                                        fontSize: 20.0,
+                                        fontFamily: 'BebasNeue',
+                                      ),),
+                                      onPressed: () => Navigator.pop(context),
+                                      color: Colors.deepPurple,
+                                    )
+                                  ]).show();
+                            } else {
+                              Provider.of<TaskData>(context, listen: false)
+                                  .addTask(newTextTitle, DatePicker.dateTime,
+                                      TimePicker.time,newTextDesc);
 
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurpleAccent,
-                                borderRadius: BorderRadius.only(topRight: Radius.circular(20.0),topLeft: Radius.circular(20.0)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Icon(Icons.add),
-                                  Text('Create Task', style: TextStyle(
+                              Navigator.pop(context);
+                            }
+
+                            //
+                            // todo : implement wrong date alerts when user selects previous dates!
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurpleAccent,
+                              borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(20.0),
+                                  topLeft: Radius.circular(20.0)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(Icons.add),
+                                Text(
+                                  'Create Task',
+                                  style: TextStyle(
                                     fontSize: 30.0,
                                     fontFamily: 'BebasNeue',
-
-                                  ),)
-                                ],
-                              ),
+                                  ),
+                                )
+                              ],
                             ),
-                          )
-                        )
+                          ),
+                        ))
                       ],
                     ),
                   ),
